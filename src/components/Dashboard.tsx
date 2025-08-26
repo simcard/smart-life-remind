@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { ReminderCard } from "./ReminderCard";
 import { QuickStats } from "./QuickStats";
 import { UpcomingReminders } from "./UpcomingReminders";
+import { AddReminderDialog } from "./AddReminderDialog";
 
 const mockReminders = [
   {
@@ -76,10 +77,7 @@ export const Dashboard = () => {
                 <Filter className="w-4 h-4 mr-2" />
                 Filter
               </Button>
-              <Button className="bg-gradient-primary hover:opacity-90 transition-opacity">
-                <Plus className="w-4 h-4 mr-2" />
-                Add Reminder
-              </Button>
+              <AddReminderDialog />
             </div>
           </div>
         </div>
