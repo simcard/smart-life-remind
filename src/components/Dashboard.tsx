@@ -16,7 +16,8 @@ const mockReminders = [
     date: "2024-08-27",
     time: "10:00 AM",
     priority: "high" as const,
-    description: "Annual checkup with Dr. Smith"
+    description: "Annual checkup with Dr. Smith",
+    completed: false
   },
   {
     id: "2", 
@@ -25,7 +26,8 @@ const mockReminders = [
     date: "2024-09-15",
     time: "All Day",
     priority: "medium" as const,
-    description: "Passport expires in 3 weeks"
+    description: "Passport expires in 3 weeks",
+    completed: false
   },
   {
     id: "3",
@@ -34,7 +36,8 @@ const mockReminders = [
     date: "2024-09-01",
     time: "Auto-renew",
     priority: "low" as const,
-    description: "Monthly renewal - $15.99"
+    description: "Monthly renewal - $15.99",
+    completed: true
   },
   {
     id: "4",
@@ -43,11 +46,42 @@ const mockReminders = [
     date: "2024-09-10",
     time: "All Day", 
     priority: "high" as const,
-    description: "Don't forget to call!"
+    description: "Don't forget to call!",
+    completed: false
+  },
+  {
+    id: "5",
+    title: "Car Insurance Renewal",
+    category: "document" as const,
+    date: "2024-08-30",
+    time: "All Day",
+    priority: "medium" as const,
+    description: "Policy expires end of month",
+    completed: false
+  },
+  {
+    id: "6",
+    title: "Dentist Checkup",
+    category: "appointment" as const,
+    date: "2024-09-05",
+    time: "2:00 PM",
+    priority: "low" as const,
+    description: "6-month cleaning appointment",
+    completed: true
   }
 ];
 
 export const Dashboard = () => {
+  const handleComplete = (id: string) => {
+    console.log("Completing reminder:", id);
+    // In a real app, this would update the reminder in state/database
+  };
+
+  const handlePostpone = (id: string) => {
+    console.log("Postponing reminder:", id);
+    // In a real app, this would update the reminder date
+  };
+
   return (
     <div className="min-h-screen bg-gradient-subtle">
       {/* Header */}
@@ -124,8 +158,13 @@ export const Dashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {mockReminders.map((reminder) => (
-                    <ReminderCard key={reminder.id} reminder={reminder} />
+                  {mockReminders.slice(0, 4).map((reminder) => (
+                    <ReminderCard 
+                      key={reminder.id} 
+                      reminder={reminder}
+                      onComplete={handleComplete}
+                      onPostpone={handlePostpone}
+                    />
                   ))}
                 </div>
               </CardContent>

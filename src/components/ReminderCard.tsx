@@ -1,7 +1,10 @@
-import { Calendar, Clock, AlertCircle, FileText, CreditCard, Heart, Settings } from "lucide-react";
+import { Calendar, Clock, AlertCircle, FileText, CreditCard, Heart, Settings, Check, MoreHorizontal, RotateCcw } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 interface Reminder {
   id: string;
@@ -11,6 +14,7 @@ interface Reminder {
   time: string;
   priority: "low" | "medium" | "high";
   description: string;
+  completed?: boolean;
 }
 
 const categoryConfig = {
@@ -58,15 +62,95 @@ const priorityConfig = {
 
 interface ReminderCardProps {
   reminder: Reminder;
+  onComplete?: (id: string) => void;
+  onPostpone?: (id: string) => void;
+  variant?: "default" | "compact";
 }
 
-export const ReminderCard = ({ reminder }: ReminderCardProps) => {
+export const ReminderCard = ({ reminder, onComplete, onPostpone, variant = "default" }: ReminderCardProps) => {
+  const { toast } = useToast();
   const categoryInfo = categoryConfig[reminder.category];
   const priorityInfo = priorityConfig[reminder.priority];
   const Icon = categoryInfo.icon;
 
+  const handleComplete = () => {
+    onComplete?.(reminder.id);
+    toast({
+      title: "Reminder completed!",
+      description: `"${reminder.title}" has been marked as complete.`,
+    });
+  };
+
+  const handlePostpone = () => {
+    onPostpone?.(reminder.id);
+    toast({
+      title: "Reminder postponed",
+      description: `"${reminder.title}" has been postponed by 1 day.`,
+    });
+  };
+
+  if (variant === "compact") {
+    return (
+      <div className={cn(
+        "flex items-center justify-between p-3 border rounded-lg hover:shadow-soft transition-all duration-200",
+        reminder.completed ? "opacity-60 bg-muted/30" : "bg-background"
+      )}>
+        <div className="flex items-center space-x-3 flex-1">
+          <div className={cn(
+            "w-8 h-8 rounded-lg flex items-center justify-center",
+            `bg-${categoryInfo.color}/10`
+          )}>
+            <Icon className={cn("w-4 h-4", `text-${categoryInfo.color}`)} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h4 className={cn(
+              "font-medium text-sm truncate",
+              reminder.completed && "line-through text-muted-foreground"
+            )}>
+              {reminder.title}
+            </h4>
+            <div className="flex items-center space-x-3 text-xs text-muted-foreground">
+              <span>{reminder.date}</span>
+              <span>{reminder.time}</span>
+            </div>
+          </div>
+          <Badge className={cn("text-xs shrink-0", priorityInfo.color)}>
+            {priorityInfo.label}
+          </Badge>
+        </div>
+        <div className="flex items-center space-x-1 ml-3">
+          {!reminder.completed && (
+            <Button variant="ghost" size="sm" onClick={handleComplete} className="h-8 w-8 p-0">
+              <Check className="w-4 h-4" />
+            </Button>
+          )}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                <MoreHorizontal className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {!reminder.completed && (
+                <DropdownMenuItem onClick={handlePostpone}>
+                  <RotateCcw className="w-4 h-4 mr-2" />
+                  Postpone 1 day
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem>Edit</DropdownMenuItem>
+              <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <Card className="group hover:shadow-medium transition-all duration-200 cursor-pointer border border-border/50 hover:border-border">
+    <Card className={cn(
+      "group hover:shadow-medium transition-all duration-200 border border-border/50 hover:border-border",
+      reminder.completed ? "opacity-60 bg-muted/30" : ""
+    )}>
       <CardContent className="p-4">
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center space-x-3">
@@ -77,18 +161,49 @@ export const ReminderCard = ({ reminder }: ReminderCardProps) => {
               <Icon className={cn("w-5 h-5", `text-${categoryInfo.color}`)} />
             </div>
             <div>
-              <h3 className="font-semibold text-sm group-hover:text-primary transition-colors">
+              <h3 className={cn(
+                "font-semibold text-sm group-hover:text-primary transition-colors",
+                reminder.completed && "line-through text-muted-foreground"
+              )}>
                 {reminder.title}
               </h3>
               <p className="text-xs text-muted-foreground">{categoryInfo.label}</p>
             </div>
           </div>
-          <Badge className={cn("text-xs", priorityInfo.color)}>
-            {priorityInfo.label}
-          </Badge>
+          <div className="flex items-center space-x-2">
+            <Badge className={cn("text-xs", priorityInfo.color)}>
+              {priorityInfo.label}
+            </Badge>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  <MoreHorizontal className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {!reminder.completed && (
+                  <>
+                    <DropdownMenuItem onClick={handleComplete}>
+                      <Check className="w-4 h-4 mr-2" />
+                      Mark Complete
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handlePostpone}>
+                      <RotateCcw className="w-4 h-4 mr-2" />
+                      Postpone 1 day
+                    </DropdownMenuItem>
+                  </>
+                )}
+                <DropdownMenuItem>Edit</DropdownMenuItem>
+                <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
         
-        <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+        <p className={cn(
+          "text-sm text-muted-foreground mb-3 line-clamp-2",
+          reminder.completed && "line-through"
+        )}>
           {reminder.description}
         </p>
         
