@@ -79,6 +79,11 @@ interface FamilyMember {
   email: string | null;
   phone: string | null;
   relationship: string | null;
+  avatar_url: string | null;
+  account_owner_id: string;
+  created_at: string;
+  updated_at: string;
+  is_active: boolean;
 }
 
 export const AddReminderDialog = ({ trigger }: AddReminderDialogProps) => {

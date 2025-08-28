@@ -17,6 +17,10 @@ interface FamilyMember {
   phone: string | null;
   relationship: string | null;
   avatar_url: string | null;
+  account_owner_id: string;
+  created_at: string;
+  updated_at: string;
+  is_active: boolean;
 }
 
 interface FamilyMembersDialogProps {
@@ -88,6 +92,16 @@ export const FamilyMembersDialog = ({ open, onOpenChange }: FamilyMembersDialogP
 
     setLoading(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Authentication Required",
+          description: "Please sign in to manage family members.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       if (editingMember) {
         // Update existing member
         const { error } = await supabase
@@ -114,6 +128,7 @@ export const FamilyMembersDialog = ({ open, onOpenChange }: FamilyMembersDialogP
             email: formData.email || null,
             phone: formData.phone || null,
             relationship: formData.relationship || null,
+            account_owner_id: user.id,
           });
 
         if (error) throw error;
