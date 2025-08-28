@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { CalendarIcon, Clock, FileText, Calendar, CreditCard, Heart, Settings, Plus } from "lucide-react";
+import { CalendarIcon, Clock, FileText, Calendar, CreditCard, Heart, Settings, Plus, Users } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,8 +12,10 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AddReminderDialogProps {
   trigger?: React.ReactNode;
@@ -71,6 +73,14 @@ const repeatOptions = [
   { value: "yearly", label: "Yearly" }
 ];
 
+interface FamilyMember {
+  id: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  relationship: string | null;
+}
+
 export const AddReminderDialog = ({ trigger }: AddReminderDialogProps) => {
   const [open, setOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -81,9 +91,32 @@ export const AddReminderDialog = ({ trigger }: AddReminderDialogProps) => {
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
   const [isAllDay, setIsAllDay] = useState(false);
+  const [assignedMember, setAssignedMember] = useState<string>("");
+  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (open) {
+      fetchFamilyMembers();
+    }
+  }, [open]);
+
+  const fetchFamilyMembers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('family_members')
+        .select('*')
+        .eq('is_active', true)
+        .order('name');
+
+      if (error) throw error;
+      setFamilyMembers(data || []);
+    } catch (error) {
+      console.error('Error fetching family members:', error);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!title || !selectedCategory || !date) {
@@ -95,22 +128,74 @@ export const AddReminderDialog = ({ trigger }: AddReminderDialogProps) => {
       return;
     }
 
-    // Here you would typically save to database
-    toast({
-      title: "Reminder Created! 🎉",
-      description: `"${title}" has been added to your reminders.`
-    });
-    
-    // Reset form
-    setTitle("");
-    setNotes("");
-    setSelectedCategory("");
-    setDate(undefined);
-    setTime("09:00");
-    setIsAllDay(false);
-    setSelectedPriority("medium");
-    setSelectedRepeat("none");
-    setOpen(false);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Authentication Required",
+          description: "Please sign in to create reminders.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const reminderData = {
+        title,
+        category: selectedCategory,
+        priority: selectedPriority,
+        description: notes,
+        due_date: format(date, 'yyyy-MM-dd'),
+        due_time: isAllDay ? null : time,
+        assigned_member_id: assignedMember || null,
+        user_id: user.id,
+      };
+
+      const { data, error } = await supabase
+        .from('reminders')
+        .insert(reminderData)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Send notifications if assigned to family member
+      if (assignedMember && data) {
+        const member = familyMembers.find(m => m.id === assignedMember);
+        if (member && (member.email || member.phone)) {
+          await supabase.functions.invoke('send-reminder-notification', {
+            body: {
+              reminder: data,
+              member: member,
+              type: 'assignment'
+            }
+          });
+        }
+      }
+
+      toast({
+        title: "Reminder Created! 🎉",
+        description: `"${title}" has been added to your reminders.`
+      });
+      
+      // Reset form
+      setTitle("");
+      setNotes("");
+      setSelectedCategory("");
+      setDate(undefined);
+      setTime("09:00");
+      setIsAllDay(false);
+      setSelectedPriority("medium");
+      setSelectedRepeat("none");
+      setAssignedMember("");
+      setOpen(false);
+    } catch (error) {
+      console.error('Error creating reminder:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create reminder. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const defaultTrigger = (
@@ -249,6 +334,42 @@ export const AddReminderDialog = ({ trigger }: AddReminderDialogProps) => {
               </div>
             </div>
           </div>
+
+          {/* Assignment to Family Member */}
+          {familyMembers.length > 0 && (
+            <div className="space-y-3">
+              <Label className="text-sm font-semibold">Assign to Family Member</Label>
+              <Select value={assignedMember} onValueChange={setAssignedMember}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select family member (optional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">None (self)</SelectItem>
+                  {familyMembers.map((member) => (
+                    <SelectItem key={member.id} value={member.id}>
+                      <div className="flex items-center space-x-2">
+                        <Avatar className="h-6 w-6">
+                          <AvatarFallback className="text-xs bg-gradient-primary text-white">
+                            {member.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span>{member.name}</span>
+                        {member.relationship && (
+                          <span className="text-xs text-muted-foreground">({member.relationship})</span>
+                        )}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {assignedMember && (
+                <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg">
+                  <Users className="w-4 h-4 inline mr-1" />
+                  This family member will receive notifications via email and WhatsApp when available.
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Priority and Repeat */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

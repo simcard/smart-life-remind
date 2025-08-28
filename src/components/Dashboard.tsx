@@ -7,6 +7,7 @@ import { ReminderCard } from "./ReminderCard";
 import { QuickStats } from "./QuickStats";
 import { UpcomingReminders } from "./UpcomingReminders";
 import { AddReminderDialog } from "./AddReminderDialog";
+import { ProfileMenu } from "./ProfileMenu";
 
 const mockReminders = [
   {
@@ -112,6 +113,7 @@ export const Dashboard = () => {
                 Filter
               </Button>
               <AddReminderDialog />
+              <ProfileMenu />
             </div>
           </div>
         </div>
