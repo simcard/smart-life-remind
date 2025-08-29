@@ -151,7 +151,7 @@ export const AddReminderDialog = ({ trigger }: AddReminderDialogProps) => {
         description: notes,
         due_date: format(date, 'yyyy-MM-dd'),
         due_time: isAllDay ? null : time,
-        assigned_member_id: assignedMember || null,
+        assigned_member_id: assignedMember === "self" ? null : assignedMember || null,
         user_id: user.id,
       };
 
@@ -349,7 +349,7 @@ export const AddReminderDialog = ({ trigger }: AddReminderDialogProps) => {
                   <SelectValue placeholder="Select family member (optional)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None (self)</SelectItem>
+                  <SelectItem value="self">None (self)</SelectItem>
                   {familyMembers.map((member) => (
                     <SelectItem key={member.id} value={member.id}>
                       <div className="flex items-center space-x-2">
