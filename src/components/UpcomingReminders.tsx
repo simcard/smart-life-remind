@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Calendar } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface Reminder {
   id: string;
@@ -53,9 +54,9 @@ export const UpcomingReminders = ({ reminders }: UpcomingRemindersProps) => {
         ))}
         
         <div className="pt-2 border-t border-border/50">
-          <button className="text-sm text-primary hover:text-primary/80 transition-colors font-medium">
+          <Link to="/reminders" className="text-sm text-primary hover:text-primary/80 transition-colors font-medium">
             View all reminders →
-          </button>
+          </Link>
         </div>
       </CardContent>
     </Card>

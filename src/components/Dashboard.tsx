@@ -1,4 +1,5 @@
 import { Calendar, Clock, Plus, Bell, Search, Filter } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -137,14 +138,18 @@ export const Dashboard = () => {
               <h2 className="text-3xl font-bold mb-2">Good morning! 👋</h2>
               <p className="text-white/90 mb-6">You have 3 upcoming reminders today. Stay on top of your schedule!</p>
               <div className="flex items-center space-x-4">
-                <Button variant="secondary" className="bg-white/20 hover:bg-white/30 text-white border-white/30">
-                  <Calendar className="w-4 h-4 mr-2" />
-                  View Calendar
-                </Button>
-                <Button variant="outline" className="bg-transparent border-white/30 text-white hover:bg-white/10">
-                  <Clock className="w-4 h-4 mr-2" />
-                  Recent Activity
-                </Button>
+                <Link to="/calendar">
+                  <Button variant="secondary" className="bg-white/20 hover:bg-white/30 text-white border-white/30">
+                    <Calendar className="w-4 h-4 mr-2" />
+                    View Calendar
+                  </Button>
+                </Link>
+                <Link to="/activity">
+                  <Button variant="outline" className="bg-transparent border-white/30 text-white hover:bg-white/10">
+                    <Clock className="w-4 h-4 mr-2" />
+                    Recent Activity
+                  </Button>
+                </Link>
               </div>
             </div>
 
