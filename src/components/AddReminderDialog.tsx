@@ -19,6 +19,9 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface AddReminderDialogProps {
   trigger?: React.ReactNode;
+  preSelectedCategory?: string;
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 const categories = [
@@ -86,9 +89,9 @@ interface FamilyMember {
   is_active: boolean;
 }
 
-export const AddReminderDialog = ({ trigger }: AddReminderDialogProps) => {
-  const [open, setOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState("");
+export const AddReminderDialog = ({ trigger, preSelectedCategory, isOpen: externalOpen, onOpenChange }: AddReminderDialogProps) => {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState(preSelectedCategory || "");
   const [selectedPriority, setSelectedPriority] = useState("medium");
   const [selectedRepeat, setSelectedRepeat] = useState("none");
   const [date, setDate] = useState<Date>();
@@ -99,6 +102,15 @@ export const AddReminderDialog = ({ trigger }: AddReminderDialogProps) => {
   const [assignedMember, setAssignedMember] = useState<string>("");
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
   const { toast } = useToast();
+
+  const open = externalOpen !== undefined ? externalOpen : internalOpen;
+  const setOpen = onOpenChange || setInternalOpen;
+
+  useEffect(() => {
+    if (preSelectedCategory) {
+      setSelectedCategory(preSelectedCategory);
+    }
+  }, [preSelectedCategory]);
 
   useEffect(() => {
     if (open) {

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Calendar, Clock, Plus, Bell, Search, Filter } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -74,6 +75,9 @@ const mockReminders = [
 ];
 
 export const Dashboard = () => {
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string>();
+
   const handleComplete = (id: string) => {
     console.log("Completing reminder:", id);
     // In a real app, this would update the reminder in state/database
@@ -82,6 +86,11 @@ export const Dashboard = () => {
   const handlePostpone = (id: string) => {
     console.log("Postponing reminder:", id);
     // In a real app, this would update the reminder date
+  };
+
+  const handleCategoryClick = (categoryId: string) => {
+    setSelectedCategory(categoryId);
+    setDialogOpen(true);
   };
 
   return (
@@ -113,7 +122,14 @@ export const Dashboard = () => {
                 <Filter className="w-4 h-4 mr-2" />
                 Filter
               </Button>
-              <AddReminderDialog />
+              <AddReminderDialog 
+                preSelectedCategory={selectedCategory}
+                isOpen={dialogOpen}
+                onOpenChange={(open) => {
+                  setDialogOpen(open);
+                  if (!open) setSelectedCategory(undefined);
+                }}
+              />
               <ProfileMenu />
             </div>
           </div>
@@ -179,7 +195,10 @@ export const Dashboard = () => {
 
             {/* Quick Actions */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <Card className="p-4 hover:shadow-medium transition-all duration-200 cursor-pointer group">
+              <Card 
+                className="p-4 hover:shadow-medium transition-all duration-200 cursor-pointer group"
+                onClick={() => handleCategoryClick("appointment")}
+              >
                 <div className="flex flex-col items-center text-center space-y-2">
                   <div className="w-12 h-12 bg-category-appointment/10 rounded-xl flex items-center justify-center group-hover:bg-category-appointment/20 transition-colors">
                     <Calendar className="w-6 h-6 text-category-appointment" />
@@ -188,7 +207,10 @@ export const Dashboard = () => {
                 </div>
               </Card>
               
-              <Card className="p-4 hover:shadow-medium transition-all duration-200 cursor-pointer group">
+              <Card 
+                className="p-4 hover:shadow-medium transition-all duration-200 cursor-pointer group"
+                onClick={() => handleCategoryClick("document")}
+              >
                 <div className="flex flex-col items-center text-center space-y-2">
                   <div className="w-12 h-12 bg-category-document/10 rounded-xl flex items-center justify-center group-hover:bg-category-document/20 transition-colors">
                     <Bell className="w-6 h-6 text-category-document" />
@@ -197,7 +219,10 @@ export const Dashboard = () => {
                 </div>
               </Card>
               
-              <Card className="p-4 hover:shadow-medium transition-all duration-200 cursor-pointer group">
+              <Card 
+                className="p-4 hover:shadow-medium transition-all duration-200 cursor-pointer group"
+                onClick={() => handleCategoryClick("subscription")}
+              >
                 <div className="flex flex-col items-center text-center space-y-2">
                   <div className="w-12 h-12 bg-category-subscription/10 rounded-xl flex items-center justify-center group-hover:bg-category-subscription/20 transition-colors">
                     <Clock className="w-6 h-6 text-category-subscription" />
@@ -206,7 +231,10 @@ export const Dashboard = () => {
                 </div>
               </Card>
               
-              <Card className="p-4 hover:shadow-medium transition-all duration-200 cursor-pointer group">
+              <Card 
+                className="p-4 hover:shadow-medium transition-all duration-200 cursor-pointer group"
+                onClick={() => handleCategoryClick("personal")}
+              >
                 <div className="flex flex-col items-center text-center space-y-2">
                   <div className="w-12 h-12 bg-category-personal/10 rounded-xl flex items-center justify-center group-hover:bg-category-personal/20 transition-colors">
                     <Plus className="w-6 h-6 text-category-personal" />
