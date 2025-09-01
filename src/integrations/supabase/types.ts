@@ -137,6 +137,7 @@ export type Database = {
           due_time: string | null
           id: string
           location: string | null
+          notification_preferences: string[] | null
           priority: string
           title: string
           updated_at: string
@@ -153,6 +154,7 @@ export type Database = {
           due_time?: string | null
           id?: string
           location?: string | null
+          notification_preferences?: string[] | null
           priority?: string
           title: string
           updated_at?: string
@@ -169,6 +171,7 @@ export type Database = {
           due_time?: string | null
           id?: string
           location?: string | null
+          notification_preferences?: string[] | null
           priority?: string
           title?: string
           updated_at?: string

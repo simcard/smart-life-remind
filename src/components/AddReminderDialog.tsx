@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { CalendarIcon, Clock, FileText, Calendar, CreditCard, Heart, Settings, Plus, Users } from "lucide-react";
+import { CalendarIcon, Clock, FileText, Calendar, CreditCard, Heart, Settings, Plus, Users, Bell, MessageCircle, Mail } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -101,6 +102,7 @@ export const AddReminderDialog = ({ trigger, preSelectedCategory, isOpen: extern
   const [isAllDay, setIsAllDay] = useState(false);
   const [assignedMember, setAssignedMember] = useState<string>("");
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
+  const [notificationPreferences, setNotificationPreferences] = useState<string[]>(["app"]);
   const { toast } = useToast();
 
   const open = externalOpen !== undefined ? externalOpen : internalOpen;
@@ -164,6 +166,7 @@ export const AddReminderDialog = ({ trigger, preSelectedCategory, isOpen: extern
         due_date: format(date, 'yyyy-MM-dd'),
         due_time: isAllDay ? null : time,
         assigned_member_id: assignedMember === "self" ? null : assignedMember || null,
+        notification_preferences: notificationPreferences,
         user_id: user.id,
       };
 
@@ -204,6 +207,7 @@ export const AddReminderDialog = ({ trigger, preSelectedCategory, isOpen: extern
       setSelectedPriority("medium");
       setSelectedRepeat("none");
       setAssignedMember("");
+      setNotificationPreferences(["app"]);
       setOpen(false);
     } catch (error) {
       console.error('Error creating reminder:', error);
@@ -424,6 +428,58 @@ export const AddReminderDialog = ({ trigger, preSelectedCategory, isOpen: extern
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+
+          {/* Notification Preferences */}
+          <div className="space-y-3">
+            <Label className="text-sm font-semibold">Notification Preferences</Label>
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { id: "app", label: "App Notification", icon: Bell },
+                { id: "whatsapp", label: "WhatsApp", icon: MessageCircle },
+                { id: "email", label: "Email", icon: Mail },
+                { id: "all", label: "All Methods", icon: Settings }
+              ].map((option) => {
+                const Icon = option.icon;
+                const isChecked = option.id === "all" 
+                  ? notificationPreferences.length === 3 && notificationPreferences.includes("app") && notificationPreferences.includes("whatsapp") && notificationPreferences.includes("email")
+                  : notificationPreferences.includes(option.id);
+
+                return (
+                  <div key={option.id} className="flex items-center space-x-3 p-3 border border-border rounded-lg hover:bg-muted/50 transition-colors">
+                    <Checkbox
+                      id={option.id}
+                      checked={isChecked}
+                      onCheckedChange={(checked) => {
+                        if (option.id === "all") {
+                          if (checked) {
+                            setNotificationPreferences(["app", "whatsapp", "email"]);
+                          } else {
+                            setNotificationPreferences(["app"]);
+                          }
+                        } else {
+                          if (checked) {
+                            setNotificationPreferences(prev => [...prev.filter(p => p !== "all"), option.id]);
+                          } else {
+                            setNotificationPreferences(prev => prev.filter(p => p !== option.id).length > 0 
+                              ? prev.filter(p => p !== option.id) 
+                              : ["app"]);
+                          }
+                        }
+                      }}
+                    />
+                    <Icon className="w-4 h-4 text-muted-foreground" />
+                    <Label htmlFor={option.id} className="text-sm cursor-pointer flex-1">
+                      {option.label}
+                    </Label>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg">
+              <Bell className="w-4 h-4 inline mr-1" />
+              App notifications are always enabled. Select additional methods for backup notifications.
             </div>
           </div>
 
