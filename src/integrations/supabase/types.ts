@@ -102,6 +102,7 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
+          plan_type: Database["public"]["Enums"]["plan_type"] | null
           updated_at: string
           user_id: string
         }
@@ -111,6 +112,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          plan_type?: Database["public"]["Enums"]["plan_type"] | null
           updated_at?: string
           user_id: string
         }
@@ -120,6 +122,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          plan_type?: Database["public"]["Enums"]["plan_type"] | null
           updated_at?: string
           user_id?: string
         }
@@ -137,8 +140,12 @@ export type Database = {
           due_time: string | null
           id: string
           location: string | null
+          location_lat: number | null
+          location_lng: number | null
+          location_radius: number | null
           notification_preferences: string[] | null
           priority: string
+          reminder_location: string | null
           title: string
           updated_at: string
           user_id: string
@@ -154,8 +161,12 @@ export type Database = {
           due_time?: string | null
           id?: string
           location?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
+          location_radius?: number | null
           notification_preferences?: string[] | null
           priority?: string
+          reminder_location?: string | null
           title: string
           updated_at?: string
           user_id: string
@@ -171,8 +182,12 @@ export type Database = {
           due_time?: string | null
           id?: string
           location?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
+          location_radius?: number | null
           notification_preferences?: string[] | null
           priority?: string
+          reminder_location?: string | null
           title?: string
           updated_at?: string
           user_id?: string
@@ -187,6 +202,33 @@ export type Database = {
           },
         ]
       }
+      user_locations: {
+        Row: {
+          created_at: string
+          id: string
+          latitude: number
+          longitude: number
+          timestamp: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          latitude: number
+          longitude: number
+          timestamp?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          latitude?: number
+          longitude?: number
+          timestamp?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -195,7 +237,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      plan_type: "family" | "business"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -322,6 +364,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      plan_type: ["family", "business"],
+    },
   },
 } as const
