@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { CalendarIcon, Clock, FileText, Calendar, CreditCard, Heart, Settings, Plus, Users, Bell, MessageCircle, Mail } from "lucide-react";
+import { CalendarIcon, Clock, FileText, Calendar, CreditCard, Heart, Settings, Plus, Users, Bell, MessageCircle, Mail, MapPin } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { LocationPicker } from "@/components/LocationPicker";
 
 interface AddReminderDialogProps {
   trigger?: React.ReactNode;
@@ -103,6 +104,7 @@ export const AddReminderDialog = ({ trigger, preSelectedCategory, isOpen: extern
   const [assignedMember, setAssignedMember] = useState<string>("");
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
   const [notificationPreferences, setNotificationPreferences] = useState<string[]>(["app"]);
+  const [location, setLocation] = useState<{ address: string; latitude: number; longitude: number } | null>(null);
   const { toast } = useToast();
 
   const open = externalOpen !== undefined ? externalOpen : internalOpen;
@@ -167,6 +169,9 @@ export const AddReminderDialog = ({ trigger, preSelectedCategory, isOpen: extern
         due_time: isAllDay ? null : time,
         assigned_member_id: assignedMember === "self" ? null : assignedMember || null,
         notification_preferences: notificationPreferences,
+        reminder_location: location?.address || null,
+        location_lat: location?.latitude || null,
+        location_lng: location?.longitude || null,
         user_id: user.id,
       };
 
@@ -206,8 +211,9 @@ export const AddReminderDialog = ({ trigger, preSelectedCategory, isOpen: extern
       setIsAllDay(false);
       setSelectedPriority("medium");
       setSelectedRepeat("none");
-      setAssignedMember("");
-      setNotificationPreferences(["app"]);
+    setAssignedMember("");
+    setNotificationPreferences(["app"]);
+    setLocation(null);
       setOpen(false);
     } catch (error) {
       console.error('Error creating reminder:', error);
@@ -482,6 +488,12 @@ export const AddReminderDialog = ({ trigger, preSelectedCategory, isOpen: extern
               App notifications are always enabled. Select additional methods for backup notifications.
             </div>
           </div>
+
+          {/* Location Picker */}
+          <LocationPicker
+            onLocationSelect={setLocation}
+            selectedLocation={location}
+          />
 
           {/* Notes */}
           <div className="space-y-2">

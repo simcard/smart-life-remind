@@ -31,6 +31,7 @@ interface FamilyMembersDialogProps {
 export const FamilyMembersDialog = ({ open, onOpenChange }: FamilyMembersDialogProps) => {
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
   const [loading, setLoading] = useState(false);
+  const [userPlan, setUserPlan] = useState<'family' | 'business'>('family');
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingMember, setEditingMember] = useState<FamilyMember | null>(null);
   const [formData, setFormData] = useState({
@@ -50,6 +51,18 @@ export const FamilyMembersDialog = ({ open, onOpenChange }: FamilyMembersDialogP
   const fetchFamilyMembers = async () => {
     setLoading(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Get user's plan
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('plan_type')
+        .eq('user_id', user.id)
+        .single();
+      
+      setUserPlan(profile?.plan_type || 'family');
+
       const { data, error } = await supabase
         .from('family_members')
         .select('*')
@@ -81,10 +94,23 @@ export const FamilyMembersDialog = ({ open, onOpenChange }: FamilyMembersDialogP
       return;
     }
 
-    if (familyMembers.length >= 5 && !editingMember) {
+    // Check user's plan and member limit
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('plan_type')
+      .eq('user_id', user.id)
+      .single();
+    
+    const maxMembers = profile?.plan_type === 'business' ? 15 : 5;
+    const planName = profile?.plan_type === 'business' ? 'Business' : 'Family';
+    
+    if (familyMembers.length >= maxMembers && !editingMember) {
       toast({
         title: "Limit Reached",
-        description: "You can only add up to 5 family members.",
+        description: `You can only add up to ${maxMembers} members with your ${planName} plan.`,
         variant: "destructive",
       });
       return;
@@ -282,10 +308,14 @@ export const FamilyMembersDialog = ({ open, onOpenChange }: FamilyMembersDialogP
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <span className="text-sm font-medium">Family Members</span>
-                <Badge variant="secondary">{familyMembers.length}/5</Badge>
+                <span className="text-sm font-medium">
+                  {userPlan === 'business' ? 'Team Members' : 'Family Members'}
+                </span>
+                <Badge variant="secondary">
+                  {familyMembers.length}/{userPlan === 'business' ? 15 : 5}
+                </Badge>
               </div>
-              {!showAddForm && familyMembers.length < 5 && (
+              {!showAddForm && familyMembers.length < (userPlan === 'business' ? 15 : 5) && (
                 <Button 
                   onClick={() => setShowAddForm(true)} 
                   size="sm"
@@ -304,8 +334,10 @@ export const FamilyMembersDialog = ({ open, onOpenChange }: FamilyMembersDialogP
             ) : familyMembers.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <Users className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p>No family members added yet.</p>
-                <p className="text-sm">Add up to 5 family members to assign reminders.</p>
+                <p>No {userPlan === 'business' ? 'team' : 'family'} members added yet.</p>
+                <p className="text-sm">
+                  Add up to {userPlan === 'business' ? 15 : 5} {userPlan === 'business' ? 'team' : 'family'} members to assign reminders.
+                </p>
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-3">

@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { User, Session } from '@supabase/supabase-js';
@@ -16,6 +17,7 @@ const AuthPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [planType, setPlanType] = useState<'family' | 'business'>('family');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -59,6 +61,7 @@ const AuthPage = () => {
         emailRedirectTo: redirectUrl,
         data: {
           full_name: fullName,
+          plan_type: planType,
         }
       }
     });
@@ -163,6 +166,30 @@ const AuthPage = () => {
                     onChange={(e) => setFullName(e.target.value)}
                     required
                   />
+                </div>
+                
+                <div className="space-y-3">
+                  <Label>Choose Your Plan</Label>
+                  <RadioGroup
+                    value={planType}
+                    onValueChange={(value) => setPlanType(value as 'family' | 'business')}
+                    className="space-y-3"
+                  >
+                    <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-muted/50">
+                      <RadioGroupItem value="family" id="family" />
+                      <div className="flex-1">
+                        <Label htmlFor="family" className="font-medium">Family Plan</Label>
+                        <p className="text-sm text-muted-foreground">Up to 5 family members</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-muted/50">
+                      <RadioGroupItem value="business" id="business" />
+                      <div className="flex-1">
+                        <Label htmlFor="business" className="font-medium">Business Plan</Label>
+                        <p className="text-sm text-muted-foreground">Up to 15 team members</p>
+                      </div>
+                    </div>
+                  </RadioGroup>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-email">Email</Label>
