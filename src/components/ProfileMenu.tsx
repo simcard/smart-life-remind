@@ -13,10 +13,12 @@ import { supabase } from "@/integrations/supabase/client";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 import { useToast } from "@/hooks/use-toast";
 import { FamilyMembersDialog } from "./FamilyMembersDialog";
+import { SettingsDialog } from "./SettingsDialog";
 
 export const ProfileMenu = () => {
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [familyDialogOpen, setFamilyDialogOpen] = useState(false);
+  const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -93,7 +95,7 @@ export const ProfileMenu = () => {
             <Users className="mr-2 h-4 w-4" />
             <span>Family Members</span>
           </DropdownMenuItem>
-          <DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setSettingsDialogOpen(true)}>
             <Settings className="mr-2 h-4 w-4" />
             <span>Settings</span>
           </DropdownMenuItem>
@@ -108,6 +110,11 @@ export const ProfileMenu = () => {
       <FamilyMembersDialog 
         open={familyDialogOpen} 
         onOpenChange={setFamilyDialogOpen} 
+      />
+      
+      <SettingsDialog 
+        open={settingsDialogOpen} 
+        onOpenChange={setSettingsDialogOpen} 
       />
     </>
   );
