@@ -1,10 +1,11 @@
-import { Calendar, Clock, AlertCircle, FileText, CreditCard, Heart, Settings, Check, MoreHorizontal, RotateCcw } from "lucide-react";
+import { Calendar, Clock, AlertCircle, FileText, CreditCard, Heart, Settings, Check, MoreHorizontal, RotateCcw, MapPin, Navigation } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { LocationNavigation } from "@/components/LocationNavigation";
 
 interface Reminder {
   id: string;
@@ -15,6 +16,9 @@ interface Reminder {
   priority: "low" | "medium" | "high";
   description: string;
   completed?: boolean;
+  location?: string;
+  location_lat?: number;
+  location_lng?: number;
 }
 
 const categoryConfig = {
@@ -113,6 +117,14 @@ export const ReminderCard = ({ reminder, onComplete, onPostpone, variant = "defa
               <span>{reminder.date}</span>
               <span>{reminder.time}</span>
             </div>
+            {reminder.location && (
+              <LocationNavigation
+                location={reminder.location}
+                latitude={reminder.location_lat}
+                longitude={reminder.location_lng}
+                variant="compact"
+              />
+            )}
           </div>
           <Badge className={cn("text-xs shrink-0", priorityInfo.color)}>
             {priorityInfo.label}
@@ -207,7 +219,7 @@ export const ReminderCard = ({ reminder, onComplete, onPostpone, variant = "defa
           {reminder.description}
         </p>
         
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
+        <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
           <div className="flex items-center space-x-2">
             <Calendar className="w-3 h-3" />
             <span>{reminder.date}</span>
@@ -217,6 +229,15 @@ export const ReminderCard = ({ reminder, onComplete, onPostpone, variant = "defa
             <span>{reminder.time}</span>
           </div>
         </div>
+        
+        {reminder.location && (
+          <LocationNavigation
+            location={reminder.location}
+            latitude={reminder.location_lat}
+            longitude={reminder.location_lng}
+            variant="full"
+          />
+        )}
       </CardContent>
     </Card>
   );

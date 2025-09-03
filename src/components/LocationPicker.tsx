@@ -26,15 +26,52 @@ export const LocationPicker = ({ onLocationSelect, selectedLocation }: LocationP
   const { requestLocation, latitude, longitude, loading } = useGeolocation();
   const { toast } = useToast();
 
+  const reverseGeocode = async (lat: number, lng: number) => {
+    try {
+      // Use OpenStreetMap Nominatim API for reverse geocoding (free)
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=16&addressdetails=1`
+      );
+      const data = await response.json();
+      
+      if (data.display_name) {
+        return data.display_name;
+      }
+      return `Location: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+    } catch (error) {
+      return `Location: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+    }
+  };
+
+  const geocodeAddress = async (address: string) => {
+    try {
+      // Use OpenStreetMap Nominatim API for geocoding (free)
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`
+      );
+      const data = await response.json();
+      
+      if (data.length > 0) {
+        return {
+          latitude: parseFloat(data[0].lat),
+          longitude: parseFloat(data[0].lon),
+          address: data[0].display_name
+        };
+      }
+      return null;
+    } catch (error) {
+      return null;
+    }
+  };
+
   const handleCurrentLocation = async () => {
     await requestLocation();
     
     if (latitude && longitude) {
-      // Use reverse geocoding to get address (simplified for demo)
-      const generatedAddress = `Location: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
-      setAddress(generatedAddress);
+      const resolvedAddress = await reverseGeocode(latitude, longitude);
+      setAddress(resolvedAddress);
       onLocationSelect({
-        address: generatedAddress,
+        address: resolvedAddress,
         latitude,
         longitude,
       });
@@ -53,23 +90,26 @@ export const LocationPicker = ({ onLocationSelect, selectedLocation }: LocationP
     setIsSearching(true);
     
     try {
-      // In a real app, you would use a geocoding service like Google Maps Geocoding API
-      // For demo purposes, we'll simulate coordinates
-      const mockCoordinates = {
-        latitude: -26.2041 + (Math.random() - 0.5) * 0.1, // Johannesburg area
-        longitude: 28.0473 + (Math.random() - 0.5) * 0.1,
-      };
+      const result = await geocodeAddress(address.trim());
+      
+      if (result) {
+        onLocationSelect({
+          address: result.address,
+          latitude: result.latitude,
+          longitude: result.longitude,
+        });
 
-      onLocationSelect({
-        address: address.trim(),
-        latitude: mockCoordinates.latitude,
-        longitude: mockCoordinates.longitude,
-      });
-
-      toast({
-        title: "Location Set",
-        description: "Address has been added to your reminder.",
-      });
+        toast({
+          title: "Location Found",
+          description: "Address has been added to your reminder.",
+        });
+      } else {
+        toast({
+          title: "Location Not Found",
+          description: "Could not find this address. Please try a different one.",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
       toast({
         title: "Error",
