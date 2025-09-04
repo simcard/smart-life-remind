@@ -6,54 +6,54 @@
 
 @layer base {
   :root {
-    --background: 32 42% 95%;
-    --foreground: 20 14% 20%;
+    --background: 220 15% 97%;
+    --foreground: 220 20% 10%;
 
-    --card: 32 50% 98%;
-    --card-foreground: 20 14% 20%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 20% 10%;
 
-    --popover: 32 50% 98%;
-    --popover-foreground: 20 14% 20%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 20% 10%;
 
-    --primary: 24 85% 70%;
-    --primary-foreground: 20 14% 20%;
+    --primary: 220 90% 25%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 20 14% 85%;
-    --secondary-foreground: 20 14% 20%;
+    --secondary: 220 10% 90%;
+    --secondary-foreground: 220 20% 10%;
 
-    --muted: 32 30% 90%;
-    --muted-foreground: 20 14% 45%;
+    --muted: 220 10% 94%;
+    --muted-foreground: 220 10% 45%;
 
-    --accent: 34 78% 65%;
-    --accent-foreground: 20 14% 20%;
+    --accent: 45 95% 55%;
+    --accent-foreground: 220 20% 10%;
 
     --success: 142 76% 36%;
     --success-foreground: 0 0% 100%;
 
     --warning: 45 93% 47%;
-    --warning-foreground: 20 14% 20%;
+    --warning-foreground: 220 20% 10%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 32 25% 85%;
-    --input: 32 25% 90%;
-    --ring: 24 85% 70%;
+    --border: 220 10% 88%;
+    --input: 220 10% 92%;
+    --ring: 220 90% 25%;
 
-    /* SmartRemind specific tokens with warm palette */
-    --gradient-primary: linear-gradient(135deg, hsl(24 85% 70%), hsl(30 75% 65%));
-    --gradient-secondary: linear-gradient(135deg, hsl(34 78% 65%), hsl(40 70% 60%));
-    --gradient-subtle: linear-gradient(135deg, hsl(32 42% 95%), hsl(30 35% 92%));
+    /* Premium luxury palette with sophisticated gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(220 90% 25%), hsl(230 85% 35%));
+    --gradient-secondary: linear-gradient(135deg, hsl(45 95% 55%), hsl(50 90% 60%));
+    --gradient-subtle: linear-gradient(135deg, hsl(220 15% 97%), hsl(225 20% 94%));
     
-    --category-appointment: 24 85% 70%;
-    --category-document: 200 75% 60%;  
-    --category-subscription: 280 70% 65%;
-    --category-personal: 15 85% 70%;
-    --category-custom: 60 75% 55%;
+    --category-appointment: 220 90% 25%;
+    --category-document: 200 75% 45%;  
+    --category-subscription: 280 60% 45%;
+    --category-personal: 15 85% 50%;
+    --category-custom: 45 95% 55%;
 
-    --shadow-soft: 0 4px 20px -2px hsl(24 85% 70% / 0.1);
-    --shadow-medium: 0 8px 30px -4px hsl(24 85% 70% / 0.15);
-    --shadow-strong: 0 20px 40px -8px hsl(24 85% 70% / 0.2);
+    --shadow-soft: 0 4px 20px -2px hsl(220 90% 25% / 0.12);
+    --shadow-medium: 0 8px 30px -4px hsl(220 90% 25% / 0.18);
+    --shadow-strong: 0 20px 40px -8px hsl(220 90% 25% / 0.25);
 
     --radius: 0.5rem;
 
