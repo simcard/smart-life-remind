@@ -88,6 +88,16 @@ export const Dashboard = () => {
     // In a real app, this would update the reminder date
   };
 
+  const handleEdit = (updatedReminder: any) => {
+    console.log("Editing reminder:", updatedReminder);
+    // In a real app, this would update the reminder in state/database
+  };
+
+  const handleDelete = (id: string) => {
+    console.log("Deleting reminder:", id);
+    // In a real app, this would remove the reminder from state/database
+  };
+
   const handleCategoryClick = (categoryId: string) => {
     setSelectedCategory(categoryId);
     setDialogOpen(true);
@@ -187,6 +197,8 @@ export const Dashboard = () => {
                       reminder={reminder}
                       onComplete={handleComplete}
                       onPostpone={handlePostpone}
+                      onEdit={handleEdit}
+                      onDelete={handleDelete}
                     />
                   ))}
                 </div>

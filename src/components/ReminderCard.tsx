@@ -1,4 +1,4 @@
-import { Calendar, Clock, AlertCircle, FileText, CreditCard, Heart, Settings, Check, MoreHorizontal, RotateCcw, MapPin, Navigation } from "lucide-react";
+import { Calendar, Clock, AlertCircle, FileText, CreditCard, Heart, Settings, Check, MoreHorizontal, RotateCcw, MapPin, Navigation, Edit, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { LocationNavigation } from "@/components/LocationNavigation";
+import { EditReminderDialog } from "@/components/EditReminderDialog";
+import { useState } from "react";
 
 interface Reminder {
   id: string;
@@ -68,10 +70,13 @@ interface ReminderCardProps {
   reminder: Reminder;
   onComplete?: (id: string) => void;
   onPostpone?: (id: string) => void;
+  onEdit?: (reminder: Reminder) => void;
+  onDelete?: (id: string) => void;
   variant?: "default" | "compact";
 }
 
-export const ReminderCard = ({ reminder, onComplete, onPostpone, variant = "default" }: ReminderCardProps) => {
+export const ReminderCard = ({ reminder, onComplete, onPostpone, onEdit, onDelete, variant = "default" }: ReminderCardProps) => {
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const { toast } = useToast();
   const categoryInfo = categoryConfig[reminder.category];
   const priorityInfo = priorityConfig[reminder.priority];
@@ -91,6 +96,26 @@ export const ReminderCard = ({ reminder, onComplete, onPostpone, variant = "defa
       title: "Reminder postponed",
       description: `"${reminder.title}" has been postponed by 1 day.`,
     });
+  };
+
+  const handleEdit = () => {
+    setEditDialogOpen(true);
+  };
+
+  const handleDelete = () => {
+    if (window.confirm(`Are you sure you want to delete "${reminder.title}"?`)) {
+      onDelete?.(reminder.id);
+      toast({
+        title: "Reminder deleted",
+        description: `"${reminder.title}" has been deleted.`,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleEditUpdate = (updatedReminder: Reminder) => {
+    onEdit?.(updatedReminder);
+    setEditDialogOpen(false);
   };
 
   if (variant === "compact") {
@@ -149,11 +174,24 @@ export const ReminderCard = ({ reminder, onComplete, onPostpone, variant = "defa
                   Postpone 1 day
                 </DropdownMenuItem>
               )}
-              <DropdownMenuItem>Edit</DropdownMenuItem>
-              <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
+              <DropdownMenuItem onClick={handleEdit}>
+                <Edit className="w-4 h-4 mr-2" />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleDelete} className="text-destructive">
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+        
+        <EditReminderDialog
+          reminder={reminder}
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          onUpdate={handleEditUpdate}
+        />
       </div>
     );
   }
@@ -205,8 +243,14 @@ export const ReminderCard = ({ reminder, onComplete, onPostpone, variant = "defa
                     </DropdownMenuItem>
                   </>
                 )}
-                <DropdownMenuItem>Edit</DropdownMenuItem>
-                <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
+                <DropdownMenuItem onClick={handleEdit}>
+                  <Edit className="w-4 h-4 mr-2" />
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleDelete} className="text-destructive">
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -238,6 +282,13 @@ export const ReminderCard = ({ reminder, onComplete, onPostpone, variant = "defa
             variant="full"
           />
         )}
+        
+        <EditReminderDialog
+          reminder={reminder}
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          onUpdate={handleEditUpdate}
+        />
       </CardContent>
     </Card>
   );

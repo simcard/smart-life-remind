@@ -26,6 +26,8 @@ interface RemindersListProps {
   categoryFilter?: string;
   onComplete?: (id: string) => void;
   onPostpone?: (id: string) => void;
+  onEdit?: (reminder: Reminder) => void;
+  onDelete?: (id: string) => void;
 }
 
 const categoryLabels = {
@@ -41,7 +43,9 @@ export const RemindersList = ({
   title = "All Reminders",
   categoryFilter,
   onComplete,
-  onPostpone
+  onPostpone,
+  onEdit,
+  onDelete
 }: RemindersListProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>(categoryFilter || "all");
@@ -146,6 +150,8 @@ export const RemindersList = ({
             viewMode={viewMode}
             onComplete={onComplete}
             onPostpone={onPostpone}
+            onEdit={onEdit}
+            onDelete={onDelete}
           />
         </TabsContent>
         
@@ -155,6 +161,8 @@ export const RemindersList = ({
             viewMode={viewMode}
             onComplete={onComplete}
             onPostpone={onPostpone}
+            onEdit={onEdit}
+            onDelete={onDelete}
           />
         </TabsContent>
         
@@ -164,6 +172,8 @@ export const RemindersList = ({
             viewMode={viewMode}
             onComplete={onComplete}
             onPostpone={onPostpone}
+            onEdit={onEdit}
+            onDelete={onDelete}
           />
         </TabsContent>
       </Tabs>
@@ -176,9 +186,11 @@ interface RemindersGridProps {
   viewMode: "grid" | "list";
   onComplete?: (id: string) => void;
   onPostpone?: (id: string) => void;
+  onEdit?: (reminder: Reminder) => void;
+  onDelete?: (id: string) => void;
 }
 
-const RemindersGrid = ({ reminders, viewMode, onComplete, onPostpone }: RemindersGridProps) => {
+const RemindersGrid = ({ reminders, viewMode, onComplete, onPostpone, onEdit, onDelete }: RemindersGridProps) => {
   if (reminders.length === 0) {
     return (
       <div className="text-center py-12">
@@ -197,6 +209,8 @@ const RemindersGrid = ({ reminders, viewMode, onComplete, onPostpone }: Reminder
             reminder={reminder}
             onComplete={onComplete}
             onPostpone={onPostpone}
+            onEdit={onEdit}
+            onDelete={onDelete}
           />
         ))}
       </div>
@@ -205,15 +219,17 @@ const RemindersGrid = ({ reminders, viewMode, onComplete, onPostpone }: Reminder
 
   return (
     <div className="space-y-3">
-      {reminders.map((reminder) => (
-        <ReminderCard
-          key={reminder.id}
-          reminder={reminder}
-          variant="compact"
-          onComplete={onComplete}
-          onPostpone={onPostpone}
-        />
-      ))}
+        {reminders.map((reminder) => (
+          <ReminderCard
+            key={reminder.id}
+            reminder={reminder}
+            variant="compact"
+            onComplete={onComplete}
+            onPostpone={onPostpone}
+            onEdit={onEdit}
+            onDelete={onDelete}
+          />
+        ))}
     </div>
   );
 };

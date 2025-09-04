@@ -83,6 +83,16 @@ export default function AllRemindersPage() {
     console.log("Postponing reminder:", id);
   };
 
+  const handleEdit = (updatedReminder: any) => {
+    console.log("Editing reminder:", updatedReminder);
+    // In a real app, this would update the reminder in state/database
+  };
+
+  const handleDelete = (id: string) => {
+    console.log("Deleting reminder:", id);
+    // In a real app, this would remove the reminder from state/database
+  };
+
   const filteredReminders = mockReminders.filter(reminder =>
     reminder.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     reminder.description.toLowerCase().includes(searchTerm.toLowerCase())
@@ -189,6 +199,8 @@ export default function AllRemindersPage() {
                         reminder={reminder}
                         onComplete={handleComplete}
                         onPostpone={handlePostpone}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
                       />
                     ))}
                   </div>
@@ -201,6 +213,8 @@ export default function AllRemindersPage() {
                         variant="compact"
                         onComplete={handleComplete}
                         onPostpone={handlePostpone}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
                       />
                     ))}
                   </div>
@@ -216,6 +230,8 @@ export default function AllRemindersPage() {
                         reminder={reminder}
                         onComplete={handleComplete}
                         onPostpone={handlePostpone}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
                       />
                     ))}
                   </div>
@@ -228,6 +244,8 @@ export default function AllRemindersPage() {
                         variant="compact"
                         onComplete={handleComplete}
                         onPostpone={handlePostpone}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
                       />
                     ))}
                   </div>
