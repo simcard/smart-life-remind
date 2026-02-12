@@ -46,7 +46,7 @@ ADD COLUMN location_radius INTEGER DEFAULT 500;
 -- Create user locations table for tracking
 CREATE TABLE public.user_locations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  user_id UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
   latitude DECIMAL(10, 8) NOT NULL,
   longitude DECIMAL(11, 8) NOT NULL,
   timestamp TIMESTAMPTZ NOT NULL DEFAULT now(),

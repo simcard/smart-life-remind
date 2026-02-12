@@ -14,28 +14,15 @@ import type { User as SupabaseUser } from "@supabase/supabase-js";
 import { useToast } from "@/hooks/use-toast";
 import { FamilyMembersDialog } from "./FamilyMembersDialog";
 import { SettingsDialog } from "./SettingsDialog";
+import { useAuthStore } from "@/store/authStore";
 
 export const ProfileMenu = () => {
-  const [user, setUser] = useState<SupabaseUser | null>(null);
+
   const [familyDialogOpen, setFamilyDialogOpen] = useState(false);
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const { toast } = useToast();
+  const {  user, isAuthenticated } = useAuthStore();
 
-  useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-    });
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setUser(session?.user ?? null);
-      }
-    );
-
-    return () => subscription.unsubscribe();
-  }, []);
 
   const handleSignOut = async () => {
     const { error } = await supabase.auth.signOut();
@@ -57,7 +44,7 @@ export const ProfileMenu = () => {
     return email.substring(0, 2).toUpperCase();
   };
 
-  if (!user) {
+  if (!isAuthenticated) {
     return (
       <Button 
         variant="outline" 

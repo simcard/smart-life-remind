@@ -1,7 +1,7 @@
 -- Create profiles table for user information
 CREATE TABLE public.profiles (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID NOT NULL UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL UNIQUE REFERENCES public.users(id) ON DELETE CASCADE,
   full_name TEXT,
   email TEXT,
   avatar_url TEXT,
@@ -12,7 +12,7 @@ CREATE TABLE public.profiles (
 -- Create family_members table
 CREATE TABLE public.family_members (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
-  account_owner_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  account_owner_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   email TEXT,
   relationship TEXT,
@@ -25,7 +25,7 @@ CREATE TABLE public.family_members (
 -- Create reminders table (updated from mock data)
 CREATE TABLE public.reminders (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
   assigned_member_id UUID REFERENCES public.family_members(id) ON DELETE SET NULL,
   title TEXT NOT NULL,
   description TEXT,
@@ -169,6 +169,6 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Create trigger for automatic profile creation
 CREATE TRIGGER on_auth_user_created
-AFTER INSERT ON auth.users
+AFTER INSERT ON public.users
 FOR EACH ROW
 EXECUTE FUNCTION public.handle_new_user();

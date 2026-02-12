@@ -8,49 +8,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { User, Session } from '@supabase/supabase-js';
+import { useAuthStore } from "@/store/authStore";
 
 const AuthPage = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [planType, setPlanType] = useState<'family' | 'business'>('family');
   const navigate = useNavigate();
+  const { login, isLoading, user } = useAuthStore();
 
-  useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-        
-        if (session?.user) {
-          navigate("/");
-        }
-      }
-    );
-
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-      
-      if (session?.user) {
-        navigate("/");
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
 
     const redirectUrl = `${window.location.origin}/`;
     
@@ -78,29 +49,37 @@ const AuthPage = () => {
         description: "We've sent you a confirmation link.",
       });
     }
-    setLoading(false);
+
   };
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    try {
+    const user = await login(email, password);
+    console.log("Logged in user:", user);
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
+    if (user) {
+      toast({
+        title: "Sign in successful",
+        description: "You have been signed in.",
+      });
+      return navigate("/");
+    }
       toast({
         title: "Sign in failed",
-        description: error.message,
+        description: "Invalid email or password.",
+        variant: "destructive",
+      });
+    } catch (error) {
+      toast({
+        title: "Sign in failed",
+        description: "Invalid email or password.",
         variant: "destructive",
       });
     }
-    setLoading(false);
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
@@ -148,8 +127,8 @@ const AuthPage = () => {
                     required
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Signing in..." : "Sign In"}
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? "Signing in..." : "Sign In"}
                 </Button>
               </form>
             </TabsContent>
@@ -214,8 +193,8 @@ const AuthPage = () => {
                     minLength={6}
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Creating account..." : "Create Account"}
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? "Creating account..." : "Create Account"}
                 </Button>
               </form>
             </TabsContent>
