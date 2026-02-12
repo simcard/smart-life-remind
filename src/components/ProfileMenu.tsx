@@ -9,12 +9,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { supabase } from "@/integrations/supabase/client";
-import type { User as SupabaseUser } from "@supabase/supabase-js";
 import { useToast } from "@/hooks/use-toast";
 import { FamilyMembersDialog } from "./FamilyMembersDialog";
 import { SettingsDialog } from "./SettingsDialog";
 import { useAuthStore } from "@/store/authStore";
+import { logout } from "@/serivces/aut.service";
 
 export const ProfileMenu = () => {
 
@@ -23,23 +22,9 @@ export const ProfileMenu = () => {
   const { toast } = useToast();
   const {  user, isAuthenticated } = useAuthStore();
 
-
   const handleSignOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to sign out. Please try again.",
-        variant: "destructive",
-      });
-    } else {
-      toast({
-        title: "Signed out",
-        description: "You have been successfully signed out.",
-      });
-    }
-  };
-
+  logout();
+  toast({ title: "Signed out", description: "You have been successfully signed out.", }); }
   const getUserInitials = (email: string) => {
     return email.substring(0, 2).toUpperCase();
   };

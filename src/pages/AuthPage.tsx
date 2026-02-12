@@ -1,70 +1,81 @@
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
+import { singUp } from "@/serivces/aut.service";
 
 const AuthPage = () => {
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [planType, setPlanType] = useState<'family' | 'business'>('family');
+  const [planType, setPlanType] = useState<"family" | "business">("family");
   const navigate = useNavigate();
-  const { login, isLoading, user } = useAuthStore();
-
+  const { login, isLoading, signUp } = useAuthStore();
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    const redirectUrl = `${window.location.origin}/`;
-    
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: {
-          full_name: fullName,
-          plan_type: planType,
-        }
+    try {
+      const response = await signUp({
+        email,
+        full_name: fullName,
+        avatar_url: "",
+        password: password,
+        plan_type: planType,
+      });
+      if (response && response.email) {
+        toast({
+          title: "Sign up successful",
+          description: "You have been signed up.",
+        });
+        return navigate("/");
       }
-    });
-
-    if (error) {
       toast({
         title: "Sign up failed",
-        description: error.message,
+        description: "Please try again.",
         variant: "destructive",
       });
-    } else {
+    } catch (error) {
+      if (error.status === 400) {
+        toast({
+          title: "Sign up failed",
+          description: "Email already exists. Please use a different email.",
+          variant: "destructive",
+        });
+        return;
+      }
       toast({
-        title: "Check your email",
-        description: "We've sent you a confirmation link.",
+        title: "Sign up failed",
+        description: error.message || "An unexpected error occurred.",
+        variant: "destructive",
       });
     }
-
   };
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-    const user = await login(email, password);
-    console.log("Logged in user:", user);
+      const user = await login(email, password);
+      console.log("Logged in user:", user);
 
-    if (user) {
-      toast({
-        title: "Sign in successful",
-        description: "You have been signed in.",
-      });
-      return navigate("/");
-    }
+      if (user) {
+        toast({
+          title: "Sign in successful",
+          description: "You have been signed in.",
+        });
+        return navigate("/");
+      }
       toast({
         title: "Sign in failed",
         description: "Invalid email or password.",
@@ -102,7 +113,7 @@ const AuthPage = () => {
               <TabsTrigger value="signin">Sign In</TabsTrigger>
               <TabsTrigger value="signup">Sign Up</TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="signin">
               <form onSubmit={handleSignIn} className="space-y-4">
                 <div className="space-y-2">
@@ -132,7 +143,7 @@ const AuthPage = () => {
                 </Button>
               </form>
             </TabsContent>
-            
+
             <TabsContent value="signup">
               <form onSubmit={handleSignUp} className="space-y-4">
                 <div className="space-y-2">
@@ -146,26 +157,36 @@ const AuthPage = () => {
                     required
                   />
                 </div>
-                
+
                 <div className="space-y-3">
                   <Label>Choose Your Plan</Label>
                   <RadioGroup
                     value={planType}
-                    onValueChange={(value) => setPlanType(value as 'family' | 'business')}
+                    onValueChange={(value) =>
+                      setPlanType(value as "family" | "business")
+                    }
                     className="space-y-3"
                   >
                     <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-muted/50">
                       <RadioGroupItem value="family" id="family" />
                       <div className="flex-1">
-                        <Label htmlFor="family" className="font-medium">Family Plan</Label>
-                        <p className="text-sm text-muted-foreground">Up to 5 family members</p>
+                        <Label htmlFor="family" className="font-medium">
+                          Family Plan
+                        </Label>
+                        <p className="text-sm text-muted-foreground">
+                          Up to 5 family members
+                        </p>
                       </div>
                     </div>
                     <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-muted/50">
                       <RadioGroupItem value="business" id="business" />
                       <div className="flex-1">
-                        <Label htmlFor="business" className="font-medium">Business Plan</Label>
-                        <p className="text-sm text-muted-foreground">Up to 15 team members</p>
+                        <Label htmlFor="business" className="font-medium">
+                          Business Plan
+                        </Label>
+                        <p className="text-sm text-muted-foreground">
+                          Up to 15 team members
+                        </p>
                       </div>
                     </div>
                   </RadioGroup>
