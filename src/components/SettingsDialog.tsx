@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Settings, User, Bell, Shield, Palette } from "lucide-react";
+import { useState } from "react";
+import { Settings, User, Bell, Shield } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -7,7 +7,6 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 interface SettingsDialogProps {
@@ -28,8 +27,6 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
   const handleSaveSettings = async () => {
     setLoading(true);
     try {
-      // Here you would typically save to a user_settings table
-      // For now, we'll just show a success message
       toast({
         title: "Settings saved",
         description: "Your settings have been updated successfully.",
@@ -56,7 +53,6 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
         </DialogHeader>
 
         <div className="space-y-6 p-1">
-          {/* Profile Settings */}
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-lg">
@@ -86,7 +82,6 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
             </CardContent>
           </Card>
 
-          {/* Notification Settings */}
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-lg">
@@ -129,7 +124,6 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
             </CardContent>
           </Card>
 
-          {/* Privacy Settings */}
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-lg">
@@ -155,7 +149,6 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
             </CardContent>
           </Card>
 
-          {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-3 pt-4">
             <Button
               onClick={handleSaveSettings}
