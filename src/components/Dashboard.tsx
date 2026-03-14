@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Calendar, Clock, Plus, Bell, Search, Filter } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -10,13 +10,14 @@ import { QuickStats } from "./QuickStats";
 import { UpcomingReminders } from "./UpcomingReminders";
 import { AddReminderDialog } from "./AddReminderDialog";
 import { ProfileMenu } from "./ProfileMenu";
-
+import { useReminderStore } from "@/store/reminderStore";
+import { useAuthStore } from "@/store/authStore";
 const mockReminders = [
   {
     id: "1",
     title: "Doctor Appointment",
     category: "appointment" as const,
-    date: "2024-08-27",
+    due_date: "2024-08-27",
     time: "10:00 AM",
     priority: "high" as const,
     description: "Annual checkup with Dr. Smith",
@@ -26,7 +27,7 @@ const mockReminders = [
     id: "2", 
     title: "Passport Renewal",
     category: "document" as const,
-    date: "2024-09-15",
+    due_date: "2024-09-15",
     time: "All Day",
     priority: "medium" as const,
     description: "Passport expires in 3 weeks",
@@ -36,7 +37,7 @@ const mockReminders = [
     id: "3",
     title: "Netflix Subscription",
     category: "subscription" as const, 
-    date: "2024-09-01",
+    due_date: "2024-09-01",
     time: "Auto-renew",
     priority: "low" as const,
     description: "Monthly renewal - $15.99",
@@ -46,7 +47,7 @@ const mockReminders = [
     id: "4",
     title: "Mom's Birthday",
     category: "personal" as const,
-    date: "2024-09-10",
+    due_date: "2024-09-10",
     time: "All Day", 
     priority: "high" as const,
     description: "Don't forget to call!",
@@ -56,7 +57,7 @@ const mockReminders = [
     id: "5",
     title: "Car Insurance Renewal",
     category: "document" as const,
-    date: "2024-08-30",
+    due_date: "2024-08-30",
     time: "All Day",
     priority: "medium" as const,
     description: "Policy expires end of month",
@@ -66,7 +67,7 @@ const mockReminders = [
     id: "6",
     title: "Dentist Checkup",
     category: "appointment" as const,
-    date: "2024-09-05",
+    due_date: "2024-09-05",
     time: "2:00 PM",
     priority: "low" as const,
     description: "6-month cleaning appointment",
@@ -77,6 +78,18 @@ const mockReminders = [
 export const Dashboard = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>();
+  const { user, isAuthenticated } = useAuthStore();
+  const { reminders, getReminders, isLoading } = useReminderStore();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      getReminders();
+    }
+  }, [isAuthenticated]);
+
+  const dashboardReminders = useMemo(() => {
+    return isAuthenticated ? reminders : mockReminders;
+  }, [isAuthenticated, reminders]);
 
   const handleComplete = (id: string) => {
     console.log("Completing reminder:", id);
@@ -153,7 +166,7 @@ export const Dashboard = () => {
           {/* Left Sidebar - Quick Stats & Upcoming */}
           <div className="lg:col-span-1 space-y-6">
             <QuickStats />
-            <UpcomingReminders reminders={mockReminders.slice(0, 3)} />
+            <UpcomingReminders reminders={dashboardReminders.slice(0, 3)} />
           </div>
 
           {/* Main Dashboard Area */}
@@ -191,7 +204,7 @@ export const Dashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {mockReminders.slice(0, 4).map((reminder) => (
+                  {dashboardReminders.slice(0, 4).map((reminder) => (
                     <ReminderCard 
                       key={reminder.id} 
                       reminder={reminder}

@@ -8,20 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { LocationNavigation } from "@/components/LocationNavigation";
 import { EditReminderDialog } from "@/components/EditReminderDialog";
 import { useState } from "react";
-
-interface Reminder {
-  id: string;
-  title: string;
-  category: "appointment" | "document" | "subscription" | "personal" | "custom";
-  date: string;
-  time: string;
-  priority: "low" | "medium" | "high";
-  description: string;
-  completed?: boolean;
-  location?: string;
-  location_lat?: number;
-  location_lng?: number;
-}
+import { Reminder } from "@/models/reminder";
 
 const categoryConfig = {
   appointment: {
@@ -139,7 +126,7 @@ export const ReminderCard = ({ reminder, onComplete, onPostpone, onEdit, onDelet
               {reminder.title}
             </h4>
             <div className="flex items-center space-x-3 text-xs text-muted-foreground">
-              <span>{reminder.date}</span>
+              <span>{reminder.due_date}</span>
               <span>{reminder.time}</span>
             </div>
             {reminder.location && (

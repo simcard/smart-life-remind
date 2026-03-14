@@ -18,6 +18,10 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { LocationPicker } from "@/components/LocationPicker";
+import { useUserStore } from "@/store/userStore";
+import { get } from "http";
+import { useReminderStore } from "@/store/reminderStore";
+import { useAuthStore } from "@/store/authStore";
 
 interface AddReminderDialogProps {
   trigger?: React.ReactNode;
@@ -78,19 +82,6 @@ const repeatOptions = [
   { value: "yearly", label: "Yearly" }
 ];
 
-interface FamilyMember {
-  id: string;
-  name: string;
-  email: string | null;
-  phone: string | null;
-  relationship: string | null;
-  avatar_url: string | null;
-  account_owner_id: string;
-  created_at: string;
-  updated_at: string;
-  is_active: boolean;
-}
-
 export const AddReminderDialog = ({ trigger, preSelectedCategory, isOpen: externalOpen, onOpenChange }: AddReminderDialogProps) => {
   const [internalOpen, setInternalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(preSelectedCategory || "");
@@ -102,10 +93,13 @@ export const AddReminderDialog = ({ trigger, preSelectedCategory, isOpen: extern
   const [notes, setNotes] = useState("");
   const [isAllDay, setIsAllDay] = useState(false);
   const [assignedMember, setAssignedMember] = useState<string>("");
-  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
   const [notificationPreferences, setNotificationPreferences] = useState<string[]>(["app"]);
   const [location, setLocation] = useState<{ address: string; latitude: number; longitude: number } | null>(null);
   const { toast } = useToast();
+  const { getFamilyMembers, familyMembers }  = useUserStore();
+  const { isAuthenticated } = useAuthStore()
+
+  const {addReminder, isLoading} = useReminderStore()
 
   const open = externalOpen !== undefined ? externalOpen : internalOpen;
   const setOpen = onOpenChange || setInternalOpen;
@@ -116,26 +110,12 @@ export const AddReminderDialog = ({ trigger, preSelectedCategory, isOpen: extern
     }
   }, [preSelectedCategory]);
 
+
   useEffect(() => {
-    if (open) {
-      fetchFamilyMembers();
+    if(open && familyMembers.length === 0) {
+      getFamilyMembers();
     }
-  }, [open]);
-
-  const fetchFamilyMembers = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('family_members')
-        .select('*')
-        .eq('is_active', true)
-        .order('name');
-
-      if (error) throw error;
-      setFamilyMembers(data || []);
-    } catch (error) {
-      console.error('Error fetching family members:', error);
-    }
-  };
+  }, [familyMembers.length, getFamilyMembers, open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -150,8 +130,7 @@ export const AddReminderDialog = ({ trigger, preSelectedCategory, isOpen: extern
     }
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      if (!isAuthenticated) {
         toast({
           title: "Authentication Required",
           description: "Please sign in to create reminders.",
@@ -159,7 +138,7 @@ export const AddReminderDialog = ({ trigger, preSelectedCategory, isOpen: extern
         });
         return;
       }
-
+console.log('time', time)
       const reminderData = {
         title,
         category: selectedCategory,
@@ -168,34 +147,25 @@ export const AddReminderDialog = ({ trigger, preSelectedCategory, isOpen: extern
         due_date: format(date, 'yyyy-MM-dd'),
         due_time: isAllDay ? null : time,
         assigned_member_id: assignedMember === "self" ? null : assignedMember || null,
-        notification_preferences: notificationPreferences,
-        reminder_location: location?.address || null,
-        location_lat: location?.latitude || null,
-        location_lng: location?.longitude || null,
-        user_id: user.id,
+        location: location?.address || null,
       };
-
-      const { data, error } = await supabase
-        .from('reminders')
-        .insert(reminderData)
-        .select()
-        .single();
-
-      if (error) throw error;
+// notification_preferences: notificationPreferences,
+      
+      await addReminder(reminderData);
 
       // Send notifications if assigned to family member
-      if (assignedMember && data) {
-        const member = familyMembers.find(m => m.id === assignedMember);
-        if (member && (member.email || member.phone)) {
-          await supabase.functions.invoke('send-reminder-notification', {
-            body: {
-              reminder: data,
-              member: member,
-              type: 'assignment'
-            }
-          });
-        }
-      }
+      // if (assignedMember && data) {
+      //   const member = familyMembers.find(m => m.id === assignedMember);
+      //   if (member && (member.email || member.phone)) {
+      //     await supabase.functions.invoke('send-reminder-notification', {
+      //       body: {
+      //         reminder: data,
+      //         member: member,
+      //         type: 'assignment'
+      //       }
+      //     });
+      //   }
+      // }
 
       toast({
         title: "Reminder Created! 🎉",
@@ -461,18 +431,19 @@ export const AddReminderDialog = ({ trigger, preSelectedCategory, isOpen: extern
                         if (option.id === "all") {
                           if (checked) {
                             setNotificationPreferences(["app", "whatsapp", "email"]);
-                          } else {
+                            return
+                          } 
                             setNotificationPreferences(["app"]);
-                          }
-                        } else {
+        
+                        } 
                           if (checked) {
                             setNotificationPreferences(prev => [...prev.filter(p => p !== "all"), option.id]);
-                          } else {
+                            return
+                          } 
                             setNotificationPreferences(prev => prev.filter(p => p !== option.id).length > 0 
                               ? prev.filter(p => p !== option.id) 
                               : ["app"]);
-                          }
-                        }
+                        
                       }}
                     />
                     <Icon className="w-4 h-4 text-muted-foreground" />

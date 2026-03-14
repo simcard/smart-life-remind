@@ -1,79 +1,22 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Search, Filter, Grid, List } from "lucide-react";
+import { ArrowLeft, Search, Grid, List } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ReminderCard } from "@/components/ReminderCard";
-
-const mockReminders = [
-  {
-    id: "1",
-    title: "Doctor Appointment",
-    category: "appointment" as const,
-    date: "2024-08-27",
-    time: "10:00 AM",
-    priority: "high" as const,
-    description: "Annual checkup with Dr. Smith",
-    completed: false
-  },
-  {
-    id: "2", 
-    title: "Passport Renewal",
-    category: "document" as const,
-    date: "2024-09-15",
-    time: "All Day",
-    priority: "medium" as const,
-    description: "Passport expires in 3 weeks",
-    completed: false
-  },
-  {
-    id: "3",
-    title: "Netflix Subscription",
-    category: "subscription" as const, 
-    date: "2024-09-01",
-    time: "Auto-renew",
-    priority: "low" as const,
-    description: "Monthly renewal - $15.99",
-    completed: true
-  },
-  {
-    id: "4",
-    title: "Mom's Birthday",
-    category: "personal" as const,
-    date: "2024-09-10",
-    time: "All Day", 
-    priority: "high" as const,
-    description: "Don't forget to call!",
-    completed: false
-  },
-  {
-    id: "5",
-    title: "Car Insurance Renewal",
-    category: "document" as const,
-    date: "2024-08-30",
-    time: "All Day",
-    priority: "medium" as const,
-    description: "Policy expires end of month",
-    completed: false
-  },
-  {
-    id: "6",
-    title: "Dentist Checkup",
-    category: "appointment" as const,
-    date: "2024-09-05",
-    time: "2:00 PM",
-    priority: "low" as const,
-    description: "6-month cleaning appointment",
-    completed: true
-  }
-];
+import { useReminderStore } from "@/store/reminderStore";
 
 export default function AllRemindersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const { reminders, getReminders, isLoading } = useReminderStore();
+
+  useEffect(() => {
+    getReminders();
+  }, []);
 
   const handleComplete = (id: string) => {
     console.log("Completing reminder:", id);
@@ -85,21 +28,20 @@ export default function AllRemindersPage() {
 
   const handleEdit = (updatedReminder: any) => {
     console.log("Editing reminder:", updatedReminder);
-    // In a real app, this would update the reminder in state/database
   };
 
   const handleDelete = (id: string) => {
     console.log("Deleting reminder:", id);
-    // In a real app, this would remove the reminder from state/database
   };
 
-  const filteredReminders = mockReminders.filter(reminder =>
-    reminder.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    reminder.description.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredReminders = (Array.isArray(reminders) ? reminders : []).filter(
+    (reminder) =>
+      reminder.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      reminder.description.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
-  const activeReminders = filteredReminders.filter(r => !r.completed);
-  const completedReminders = filteredReminders.filter(r => r.completed);
+  const activeReminders = filteredReminders.filter((r) => !r.completed);
+  const completedReminders = filteredReminders.filter((r) => r.completed);
 
   return (
     <div className="min-h-screen bg-gradient-subtle">
@@ -117,6 +59,7 @@ export default function AllRemindersPage() {
                 All Reminders
               </h1>
             </div>
+
             <div className="flex items-center space-x-2">
               <Button
                 variant={viewMode === "grid" ? "default" : "outline"}
@@ -139,7 +82,6 @@ export default function AllRemindersPage() {
 
       <main className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          
           {/* Filters Sidebar */}
           <div className="lg:col-span-1 space-y-6">
             <Card className="shadow-soft">
@@ -149,30 +91,43 @@ export default function AllRemindersPage() {
               <CardContent className="space-y-4">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                  <Input 
-                    placeholder="Search reminders..." 
+                  <Input
+                    placeholder="Search reminders..."
                     className="pl-10"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <h4 className="font-medium text-sm">Categories</h4>
                   <div className="space-y-1">
-                    {["appointment", "document", "subscription", "personal"].map((category) => (
-                      <Badge key={category} variant="outline" className="w-full justify-start cursor-pointer hover:bg-muted/50">
+                    {[
+                      "appointment",
+                      "document",
+                      "subscription",
+                      "personal",
+                    ].map((category) => (
+                      <Badge
+                        key={category}
+                        variant="outline"
+                        className="w-full justify-start cursor-pointer hover:bg-muted/50"
+                      >
                         {category.charAt(0).toUpperCase() + category.slice(1)}
                       </Badge>
                     ))}
                   </div>
                 </div>
-                
+
                 <div className="space-y-2">
                   <h4 className="font-medium text-sm">Priority</h4>
                   <div className="space-y-1">
                     {["high", "medium", "low"].map((priority) => (
-                      <Badge key={priority} variant="outline" className="w-full justify-start cursor-pointer hover:bg-muted/50">
+                      <Badge
+                        key={priority}
+                        variant="outline"
+                        className="w-full justify-start cursor-pointer hover:bg-muted/50"
+                      >
                         {priority.charAt(0).toUpperCase() + priority.slice(1)}
                       </Badge>
                     ))}
@@ -182,76 +137,115 @@ export default function AllRemindersPage() {
             </Card>
           </div>
 
-          {/* Reminders List */}
+          {/* Reminders Section */}
           <div className="lg:col-span-3">
-            <Tabs defaultValue="active" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="active">Active ({activeReminders.length})</TabsTrigger>
-                <TabsTrigger value="completed">Completed ({completedReminders.length})</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="active" className="space-y-4">
-                {viewMode === "grid" ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {activeReminders.map((reminder) => (
-                      <ReminderCard 
-                        key={reminder.id} 
-                        reminder={reminder}
-                        onComplete={handleComplete}
-                        onPostpone={handlePostpone}
-                        onEdit={handleEdit}
-                        onDelete={handleDelete}
-                      />
-                    ))}
+            {isLoading ? (
+              <Card className="shadow-soft">
+                <CardContent className="py-16 flex justify-center items-center">
+                  <div className="flex flex-col items-center space-y-3">
+                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-muted border-t-primary"></div>
+                    <p className="text-muted-foreground">
+                      Loading reminders...
+                    </p>
                   </div>
-                ) : (
-                  <div className="space-y-3">
-                    {activeReminders.map((reminder) => (
-                      <ReminderCard 
-                        key={reminder.id} 
-                        reminder={reminder}
-                        variant="compact"
-                        onComplete={handleComplete}
-                        onPostpone={handlePostpone}
-                        onEdit={handleEdit}
-                        onDelete={handleDelete}
-                      />
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
-              
-              <TabsContent value="completed" className="space-y-4">
-                {viewMode === "grid" ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {completedReminders.map((reminder) => (
-                      <ReminderCard 
-                        key={reminder.id} 
-                        reminder={reminder}
-                        onComplete={handleComplete}
-                        onPostpone={handlePostpone}
-                        onEdit={handleEdit}
-                        onDelete={handleDelete}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {completedReminders.map((reminder) => (
-                      <ReminderCard 
-                        key={reminder.id} 
-                        reminder={reminder}
-                        variant="compact"
-                        onComplete={handleComplete}
-                        onPostpone={handlePostpone}
-                        onEdit={handleEdit}
-                        onDelete={handleDelete}
-                      />
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
-            </Tabs>
+                </CardContent>
+              </Card>
+            ) : filteredReminders.length === 0 ? (
+              <Card className="shadow-soft">
+                <CardContent className="py-16 text-center">
+                  <p className="text-muted-foreground text-lg">
+                    No reminders found.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <Tabs defaultValue="active" className="space-y-6">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="active">
+                    Active ({activeReminders.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="completed">
+                    Completed ({completedReminders.length})
+                  </TabsTrigger>
+                </TabsList>
+
+                {/* Active Tab */}
+                <TabsContent value="active" className="space-y-4">
+                  {activeReminders.length === 0 ? (
+                    <Card>
+                      <CardContent className="py-10 text-center text-muted-foreground">
+                        No active reminders.
+                      </CardContent>
+                    </Card>
+                  ) : viewMode === "grid" ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {activeReminders.map((reminder) => (
+                        <ReminderCard
+                          key={reminder.id}
+                          reminder={reminder}
+                          onComplete={handleComplete}
+                          onPostpone={handlePostpone}
+                          onEdit={handleEdit}
+                          onDelete={handleDelete}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {activeReminders.map((reminder) => (
+                        <ReminderCard
+                          key={reminder.id}
+                          reminder={reminder}
+                          variant="compact"
+                          onComplete={handleComplete}
+                          onPostpone={handlePostpone}
+                          onEdit={handleEdit}
+                          onDelete={handleDelete}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+
+                {/* Completed Tab */}
+                <TabsContent value="completed" className="space-y-4">
+                  {completedReminders.length === 0 ? (
+                    <Card>
+                      <CardContent className="py-10 text-center text-muted-foreground">
+                        No completed reminders.
+                      </CardContent>
+                    </Card>
+                  ) : viewMode === "grid" ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {completedReminders.map((reminder) => (
+                        <ReminderCard
+                          key={reminder.id}
+                          reminder={reminder}
+                          onComplete={handleComplete}
+                          onPostpone={handlePostpone}
+                          onEdit={handleEdit}
+                          onDelete={handleDelete}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {completedReminders.map((reminder) => (
+                        <ReminderCard
+                          key={reminder.id}
+                          reminder={reminder}
+                          variant="compact"
+                          onComplete={handleComplete}
+                          onPostpone={handlePostpone}
+                          onEdit={handleEdit}
+                          onDelete={handleDelete}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
+            )}
           </div>
         </div>
       </main>

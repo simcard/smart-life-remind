@@ -20,6 +20,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     const response = await login(email, password );
 
     const user = response.data.user;
+
     set({ user, isAuthenticated: true, isLoading: false });
     
     return user;

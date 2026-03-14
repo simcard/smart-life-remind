@@ -67,8 +67,6 @@ const AuthPage = () => {
     e.preventDefault();
     try {
       const user = await login(email, password);
-      console.log("Logged in user:", user);
-
       if (user) {
         toast({
           title: "Sign in successful",

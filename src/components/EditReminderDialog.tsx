@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { CalendarIcon, Clock, FileText, Calendar, CreditCard, Heart, Settings, Users, Bell, MessageCircle, Mail, MapPin } from "lucide-react";
+import { CalendarIcon, Clock, FileText, Calendar, CreditCard, Heart, Settings, Users, Bell, MessageCircle, Mail, MapPin, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,20 +18,8 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { LocationPicker } from "@/components/LocationPicker";
-
-interface Reminder {
-  id: string;
-  title: string;
-  category: "appointment" | "document" | "subscription" | "personal" | "custom";
-  date: string;
-  time: string;
-  priority: "low" | "medium" | "high";
-  description: string;
-  completed?: boolean;
-  location?: string;
-  location_lat?: number;
-  location_lng?: number;
-}
+import { Reminder } from "@/models/reminder";
+import { useReminderStore } from "@/store/reminderStore";
 
 interface EditReminderDialogProps {
   reminder: Reminder | null;
@@ -94,6 +82,7 @@ export const EditReminderDialog = ({ reminder, open, onOpenChange, onUpdate }: E
   const [isAllDay, setIsAllDay] = useState(false);
   const [location, setLocation] = useState<{ address: string; latitude: number; longitude: number } | null>(null);
   const { toast } = useToast();
+  const { updateReminder, isLoading} = useReminderStore();
 
   useEffect(() => {
     if (reminder && open) {
@@ -101,7 +90,7 @@ export const EditReminderDialog = ({ reminder, open, onOpenChange, onUpdate }: E
       setSelectedCategory(reminder.category);
       setSelectedPriority(reminder.priority);
       setNotes(reminder.description);
-      setDate(new Date(reminder.date));
+      setDate(new Date(reminder.due_date));
       setTime(reminder.time === "All Day" ? "09:00" : reminder.time);
       setIsAllDay(reminder.time === "All Day");
       
@@ -136,7 +125,7 @@ export const EditReminderDialog = ({ reminder, open, onOpenChange, onUpdate }: E
         category: selectedCategory as any,
         priority: selectedPriority as any,
         description: notes,
-        date: format(date, 'yyyy-MM-dd'),
+        due_date: format(date, 'yyyy-MM-dd'),
         time: isAllDay ? "All Day" : time,
         location: location?.address || undefined,
         location_lat: location?.latitude || undefined,
@@ -144,6 +133,8 @@ export const EditReminderDialog = ({ reminder, open, onOpenChange, onUpdate }: E
       };
 
       onUpdate(updatedReminder);
+
+      await updateReminder(reminder.id, updatedReminder);
       
       toast({
         title: "Reminder Updated! ✅",
@@ -339,8 +330,19 @@ export const EditReminderDialog = ({ reminder, open, onOpenChange, onUpdate }: E
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" className="bg-gradient-primary hover:opacity-90">
-              Update Reminder
+                 <Button
+              type="submit"
+              disabled={isLoading}
+              className="bg-gradient-primary hover:opacity-90 min-w-[160px]"
+            >
+              {isLoading ? (
+                <div className="flex items-center space-x-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Updating...</span>
+                </div>
+              ) : (
+                "Update Reminder"
+              )}
             </Button>
           </div>
         </form>
