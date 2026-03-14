@@ -16,8 +16,10 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { LocationPicker } from "@/components/LocationPicker";
 import { useUserStore } from "@/store/userStore";
+import { get } from "http";
 import { useReminderStore } from "@/store/reminderStore";
 import { useAuthStore } from "@/store/authStore";
 

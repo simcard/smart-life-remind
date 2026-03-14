@@ -7,8 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import getApi from "@/api/client";
 
 interface FamilyMember {
   id: string;
@@ -51,13 +51,26 @@ export const FamilyMembersDialog = ({ open, onOpenChange }: FamilyMembersDialogP
   const fetchFamilyMembers = async () => {
     setLoading(true);
     try {
-      const api = getApi();
-      const [membersRes, planRes] = await Promise.all([
-        api.get('/family'),
-        api.get('/family/plan'),
-      ]);
-      setFamilyMembers(membersRes.data || []);
-      setUserPlan(planRes.data?.plan_type || 'family');
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Get user's plan
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('plan_type')
+        .eq('user_id', user.id)
+        .single();
+      
+      setUserPlan(profile?.plan_type || 'family');
+
+      const { data, error } = await supabase
+        .from('family_members')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+      setFamilyMembers(data || []);
     } catch (error) {
       toast({
         title: "Error",
@@ -81,8 +94,18 @@ export const FamilyMembersDialog = ({ open, onOpenChange }: FamilyMembersDialogP
       return;
     }
 
-    const maxMembers = userPlan === 'business' ? 15 : 5;
-    const planName = userPlan === 'business' ? 'Business' : 'Family';
+    // Check user's plan and member limit
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('plan_type')
+      .eq('user_id', user.id)
+      .single();
+    
+    const maxMembers = profile?.plan_type === 'business' ? 15 : 5;
+    const planName = profile?.plan_type === 'business' ? 'Business' : 'Family';
     
     if (familyMembers.length >= maxMembers && !editingMember) {
       toast({
@@ -95,33 +118,61 @@ export const FamilyMembersDialog = ({ open, onOpenChange }: FamilyMembersDialogP
 
     setLoading(true);
     try {
-      const api = getApi();
-      if (editingMember) {
-        await api.put(`/family/${editingMember.id}`, {
-          name: formData.name,
-          email: formData.email || null,
-          phone: formData.phone || null,
-          relationship: formData.relationship || null,
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Authentication Required",
+          description: "Please sign in to manage family members.",
+          variant: "destructive",
         });
-        toast({ title: "Success", description: "Family member updated successfully." });
-      } else {
-        await api.post('/family', {
-          name: formData.name,
-          email: formData.email || null,
-          phone: formData.phone || null,
-          relationship: formData.relationship || null,
-        });
-        toast({ title: "Success", description: "Family member added successfully." });
+        return;
       }
 
+      if (editingMember) {
+        // Update existing member
+        const { error } = await supabase
+          .from('family_members')
+          .update({
+            name: formData.name,
+            email: formData.email || null,
+            phone: formData.phone || null,
+            relationship: formData.relationship || null,
+          })
+          .eq('id', editingMember.id);
+
+        if (error) throw error;
+        toast({
+          title: "Success",
+          description: "Family member updated successfully.",
+        });
+      } else {
+        // Add new member
+        const { error } = await supabase
+          .from('family_members')
+          .insert({
+            name: formData.name,
+            email: formData.email || null,
+            phone: formData.phone || null,
+            relationship: formData.relationship || null,
+            account_owner_id: user.id,
+          });
+
+        if (error) throw error;
+        toast({
+          title: "Success",
+          description: "Family member added successfully.",
+        });
+      }
+
+      // Reset form and refresh list
       setFormData({ name: "", email: "", phone: "", relationship: "" });
       setShowAddForm(false);
       setEditingMember(null);
       fetchFamilyMembers();
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: "Error",
-        description: error?.response?.data?.error || "Failed to save family member.",
+        description: "Failed to save family member.",
         variant: "destructive",
       });
     } finally {
@@ -147,9 +198,17 @@ export const FamilyMembersDialog = ({ open, onOpenChange }: FamilyMembersDialogP
 
     setLoading(true);
     try {
-      const api = getApi();
-      await api.delete(`/family/${id}`);
-      toast({ title: "Success", description: "Family member removed successfully." });
+      const { error } = await supabase
+        .from('family_members')
+        .update({ is_active: false })
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      toast({
+        title: "Success",
+        description: "Family member removed successfully.",
+      });
       fetchFamilyMembers();
     } catch (error) {
       toast({
@@ -183,6 +242,7 @@ export const FamilyMembersDialog = ({ open, onOpenChange }: FamilyMembersDialogP
         </DialogHeader>
 
         <div className="space-y-6 mt-6">
+          {/* Add/Edit Form */}
           {showAddForm && (
             <Card className="border-2 border-primary/20">
               <CardContent className="p-6">
@@ -244,6 +304,7 @@ export const FamilyMembersDialog = ({ open, onOpenChange }: FamilyMembersDialogP
             </Card>
           )}
 
+          {/* Family Members List */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">

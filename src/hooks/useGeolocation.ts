@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import getApi from '@/api/client';
 
 interface GeolocationState {
   latitude: number | null;
@@ -25,10 +25,14 @@ export const useGeolocation = () => {
 
   const updateLocation = async (latitude: number, longitude: number) => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-      const api = getApi();
-      await api.post('/locations', { latitude, longitude });
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      await supabase.from('user_locations').insert({
+        user_id: user.id,
+        latitude,
+        longitude,
+      });
     } catch (error) {
       console.error('Error updating location:', error);
     }
@@ -47,7 +51,7 @@ export const useGeolocation = () => {
         navigator.geolocation.getCurrentPosition(resolve, reject, {
           enableHighAccuracy: true,
           timeout: 10000,
-          maximumAge: 300000,
+          maximumAge: 300000, // 5 minutes
         });
       });
 
@@ -114,7 +118,7 @@ export const useGeolocation = () => {
       },
       {
         enableHighAccuracy: true,
-        maximumAge: 60000,
+        maximumAge: 60000, // 1 minute
         timeout: 10000,
       }
     );
@@ -122,17 +126,53 @@ export const useGeolocation = () => {
 
   const checkNearbyReminders = async (userLat: number, userLng: number) => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) return [];
-      const api = getApi();
-      const response = await api.get('/locations/nearby-reminders', {
-        params: { lat: userLat, lng: userLng },
-      });
-      return response.data || [];
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+
+      const { data: reminders, error } = await supabase
+        .from('reminders')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('completed', false)
+        .not('location_lat', 'is', null)
+        .not('location_lng', 'is', null);
+
+      if (error) throw error;
+
+      const nearbyReminders = reminders?.filter(reminder => {
+        if (!reminder.location_lat || !reminder.location_lng) return false;
+        
+        const distance = calculateDistance(
+          userLat,
+          userLng,
+          reminder.location_lat,
+          reminder.location_lng
+        );
+        
+        return distance <= (reminder.location_radius || 500); // Default 500m radius
+      }) || [];
+
+      return nearbyReminders;
     } catch (error) {
       console.error('Error checking nearby reminders:', error);
       return [];
     }
+  };
+
+  // Calculate distance between two coordinates in meters
+  const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
+    const R = 6371e3; // Earth's radius in meters
+    const φ1 = (lat1 * Math.PI) / 180;
+    const φ2 = (lat2 * Math.PI) / 180;
+    const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+    const Δλ = ((lng2 - lng1) * Math.PI) / 180;
+
+    const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+              Math.cos(φ1) * Math.cos(φ2) *
+              Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return R * c;
   };
 
   return {
